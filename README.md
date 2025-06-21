@@ -1,571 +1,732 @@
-# GitHub管理とデプロイメント構成ガイド
+# Golang + Next.js + Docker テックブログ構築ガイド
 
-## 1. GitHubリポジトリ構成
+## 1. プロジェクト構成
 
-### モノリポ構成（推奨）
 ```
-techblog/                           # メインリポジトリ
-├── .github/
-│   └── workflows/
-│       ├── backend-deploy.yml      # バックエンドCI/CD
-│       ├── frontend-deploy.yml     # フロントエンドCI/CD
-│       ├── docker-build.yml        # Dockerイメージビルド
-│       └── tests.yml               # テスト実行
-├── backend/                        # Golangバックエンド
-├── frontend/                       # Next.jsフロントエンド
-├── docker/                         # Docker設定
-├── scripts/                        # デプロイスクリプト
-├── docs/                          # ドキュメント
-├── .env.example                   # 環境変数例
+techblog/
+├── backend/                     # Golang API サーバー
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go         # エントリーポイント
+│   ├── internal/
+│   │   ├── handlers/           # HTTP ハンドラー
+│   │   │   ├── auth.go
+│   │   │   ├── blog.go
+│   │   │   ├── post.go
+│   │   │   └── admin.go
+│   │   ├── models/            # データベースモデル
+│   │   │   ├── blog.go
+│   │   │   ├── post.go
+│   │   │   ├── user.go
+│   │   │   └── like.go
+│   │   ├── database/          # DB接続・マイグレーション
+│   │   │   ├── connection.go
+│   │   │   └── migration.go
+│   │   ├── middleware/        # ミドルウェア
+│   │   │   ├── cors.go
+│   │   │   ├── auth.go
+│   │   │   └── logging.go
+│   │   └── utils/            # ユーティリティ
+│   │       ├── markdown.go
+│   │       ├── slug.go
+│   │       └── validation.go
+│   ├── configs/              # 設定ファイル
+│   │   └── config.go
+│   ├── migrations/           # DBマイグレーションファイル
+│   ├── go.mod
+│   ├── go.sum
+│   ├── Dockerfile
+│   └── .env.example
+├── frontend/                   # Next.js フロントエンド
+│   ├── src/
+│   │   ├── app/               # App Router
+│   │   │   ├── admin/
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── login/
+│   │   │   │   └── posts/
+│   │   │   │       ├── new/
+│   │   │   │       └── [id]/
+│   │   │   ├── [blogSlug]/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [postSlug]/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── globals.css
+│   │   ├── components/        # 再利用可能コンポーネント
+│   │   │   ├── ui/
+│   │   │   ├── MarkdownEditor.tsx
+│   │   │   ├── LikeButton.tsx
+│   │   │   ├── RecommendedPosts.tsx
+│   │   │   └── PopularPosts.tsx
+│   │   ├── lib/              # ユーティリティ・API
+│   │   │   ├── api.ts
+│   │   │   ├── admin-api.ts
+│   │   │   └── utils.ts
+│   │   └── types/            # TypeScript型定義
+│   │       ├── blog.ts
+│   │       └── admin.ts
+│   ├── public/               # 静的ファイル
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── next.config.js
+│   ├── Dockerfile
+│   └── .env.local.example
+├── docker/                    # Docker設定
+│   ├── docker-compose.yml
+│   ├── docker-compose.dev.yml
+│   ├── postgres/
+│   │   └── init.sql
+│   └── nginx/
+│       └── nginx.conf
+├── scripts/                  # 便利スクリプト
+│   ├── setup.sh
+│   ├── dev.sh
+│   └── deploy.sh
+├── docs/                     # ドキュメント
+│   ├── API.md
+│   ├── DEPLOYMENT.md
+│   └── DEVELOPMENT.md
+├── .env.example
 ├── .gitignore
-├── README.md
-└── docker-compose.yml
-```
-
-### 分離リポジトリ構成（オプション）
-```
-techblog-backend/                   # バックエンド専用リポジトリ
-├── .github/workflows/
-├── cmd/
-├── internal/
-├── Dockerfile
-└── README.md
-
-techblog-frontend/                  # フロントエンド専用リポジトリ
-├── .github/workflows/
-├── src/
-├── Dockerfile
 └── README.md
 ```
 
-## 2. .gitignore 設定
+## 2. 初期セットアップ
 
-**ルート .gitignore**
-```gitignore
-# 環境変数
-.env
-.env.local
-.env.production
+### 2.1 プロジェクトディレクトリ作成
 
-# OS関連
-.DS_Store
-Thumbs.db
-
-# IDEファイル
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# ログファイル
-*.log
-logs/
-
-# 一時ファイル
-tmp/
-temp/
-
-# Docker関連
-docker-compose.override.yml
-
-# 本番環境設定（秘匿情報を含む可能性）
-docker-compose.prod.yml
-```
-
-**backend/.gitignore**
-```gitignore
-# Go関連
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-go.work
-
-# ビルド成果物
-main
-dist/
-build/
-
-# 環境変数
-.env
-.env.local
-
-# テスト関連
-coverage.txt
-coverage.html
-
-# Air（ホットリロード）
-tmp/
-.air.toml.local
-
-# IDE
-.vscode/
-.idea/
-```
-
-**frontend/.gitignore**
-```gitignore
-# Node.js関連
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Next.js関連
-.next/
-out/
-build/
-dist/
-
-# 環境変数
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# キャッシュ
-.cache/
-.parcel-cache/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-```
-
-## 3. GitHub Actions CI/CD設定
-
-### 3.1 バックエンドデプロイ
-
-**.github/workflows/backend-deploy.yml**
-```yaml
-name: Deploy Backend
-
-on:
-  push:
-    branches: [main]
-    paths: ['backend/**']
-  workflow_dispatch:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-          
-      - name: Run tests
-        working-directory: ./backend
-        run: |
-          go mod download
-          go test ./...
-          
-  build-and-deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/techblog-backend:latest
-            ${{ secrets.DOCKER_USERNAME }}/techblog-backend:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      # Railway デプロイ例
-      - name: Deploy to Railway
-        uses: railway-deploy@v1
-        with:
-          token: ${{ secrets.RAILWAY_TOKEN }}
-          service: backend
-          
-      # または VPS デプロイ例
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/techblog-backend:latest
-            docker stop techblog-backend || true
-            docker rm techblog-backend || true
-            docker run -d \
-              --name techblog-backend \
-              --network techblog-network \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              ${{ secrets.DOCKER_USERNAME }}/techblog-backend:latest
-```
-
-### 3.2 フロントエンドデプロイ
-
-**.github/workflows/frontend-deploy.yml**
-```yaml
-name: Deploy Frontend
-
-on:
-  push:
-    branches: [main]
-    paths: ['frontend/**']
-  workflow_dispatch:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-          
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
-        
-      - name: Run linting
-        working-directory: ./frontend
-        run: npm run lint
-        
-      - name: Run type check
-        working-directory: ./frontend
-        run: npm run type-check
-        
-      - name: Build
-        working-directory: ./frontend
-        run: npm run build
-        
-  deploy-vercel:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          vercel-args: '--prod'
-          
-  # または Netlify デプロイ
-  deploy-netlify:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
-          
-      - name: Install and build
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run build
-          
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2.0
-        with:
-          publish-dir: './frontend/out'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-```
-
-## 4. デプロイ先別の構成
-
-### 4.1 Vercel + Railway 構成（推奨）
-
-```yaml
-# デプロイ構成
-Frontend (Next.js):  Vercel
-Backend (Golang):    Railway
-Database:            Railway PostgreSQL
-```
-
-**メリット:**
-- フロントエンドの高速デプロイ・CDN配信
-- バックエンドの簡単スケーリング
-- 無料枠での運用可能
-
-**設定例:**
 ```bash
-# Vercelプロジェクト設定
-vercel --prod
-vercel env add NEXT_PUBLIC_API_URL production
+# プロジェクトディレクトリを作成
+mkdir techblog
+cd techblog
 
-# Railwayプロジェクト設定
-railway login
-railway link
-railway add postgresql
-railway deploy
+# 各ディレクトリを作成
+mkdir -p backend/{cmd/server,internal/{handlers,models,database,middleware,utils},configs,migrations}
+mkdir -p frontend/src/{app,components,lib,types}
+mkdir -p docker/{postgres,nginx}
+mkdir -p scripts docs
 ```
 
-### 4.2 フル VPS 構成
+### 2.2 Docker環境構築
 
+**docker/docker-compose.yml**
 ```yaml
-# VPS 上での構成
-Frontend:  Nginx + Next.js (static export)
-Backend:   Docker + Golang
-Database:  PostgreSQL
-Proxy:     Nginx Reverse Proxy
+version: '3.8'
+
+services:
+  # PostgreSQL データベース
+  postgres:
+    image: postgres:15-alpine
+    container_name: techblog_postgres
+    environment:
+      POSTGRES_DB: techblog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - techblog_network
+
+  # Redis (キャッシュ・セッション管理)
+  redis:
+    image: redis:7-alpine
+    container_name: techblog_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - techblog_network
+
+  # Golang API サーバー
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: techblog_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: techblog
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: your-secret-key
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ../backend:/app
+    networks:
+      - techblog_network
+    restart: unless-stopped
+
+  # Next.js フロントエンド
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: techblog_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    networks:
+      - techblog_network
+    restart: unless-stopped
+
+  # Nginx (プロダクション用リバースプロキシ)
+  nginx:
+    image: nginx:alpine
+    container_name: techblog_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - techblog_network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+
+networks:
+  techblog_network:
+    driver: bridge
 ```
 
-**docker-compose.production.yml**
+**docker/docker-compose.dev.yml** (開発用)
 ```yaml
 version: '3.8'
 
 services:
   postgres:
     image: postgres:15-alpine
+    container_name: techblog_postgres_dev
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - techblog-network
-    restart: unless-stopped
-
-  backend:
-    image: ${DOCKER_USERNAME}/techblog-backend:latest
-    environment:
-      DB_HOST: postgres
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-    networks:
-      - techblog-network
-    restart: unless-stopped
-    depends_on:
-      - postgres
-
-  nginx:
-    image: nginx:alpine
+      POSTGRES_DB: techblog_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
-      - "80:80"
-      - "443:443"
+      - "5432:5432"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./frontend/out:/usr/share/nginx/html
-      - ./ssl:/etc/nginx/ssl
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - techblog-network
-    restart: unless-stopped
-    depends_on:
-      - backend
+      - techblog_dev_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: techblog_redis_dev
+    ports:
+      - "6379:6379"
+    networks:
+      - techblog_dev_network
 
 volumes:
-  postgres_data:
+  postgres_dev_data:
 
 networks:
-  techblog-network:
+  techblog_dev_network:
     driver: bridge
 ```
 
-### 4.3 AWS 構成
+### 2.3 データベース初期化
 
-```yaml
-Frontend:  S3 + CloudFront
-Backend:   ECS Fargate
-Database:  RDS PostgreSQL
+**docker/postgres/init.sql**
+```sql
+-- 初期データベース設定
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- 検索用の拡張（全文検索）
+CREATE EXTENSION IF NOT EXISTS "unaccent";
+
+-- 初期ブログデータ
+INSERT INTO blogs (name, slug, description, domain, created_at, updated_at) 
+VALUES 
+  ('Tech Blog', 'tech-blog', 'プログラミングとテクノロジーについてのブログ', 'localhost:3000', NOW(), NOW()),
+  ('Dev Notes', 'dev-notes', '開発メモとTips集', 'localhost:3000', NOW(), NOW())
+ON CONFLICT (slug) DO NOTHING;
+
+-- 初期管理者アカウント (パスワード: admin123)
+INSERT INTO admins (username, email, password, name, created_at, updated_at)
+VALUES (
+  'admin',
+  'admin@example.com',
+  '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  '管理者',
+  NOW(),
+  NOW()
+) ON CONFLICT (username) DO NOTHING;
 ```
 
-## 5. 環境変数管理
+## 3. バックエンド（Golang）セットアップ
 
-### GitHub Secrets設定
+### 3.1 Go モジュール初期化
 
 ```bash
-# Docker関連
-DOCKER_USERNAME=your-docker-username
-DOCKER_PASSWORD=your-docker-password
+cd backend
+go mod init techblog-backend
 
-# Vercel関連
-VERCEL_TOKEN=your-vercel-token
-VERCEL_ORG_ID=your-org-id
-VERCEL_PROJECT_ID=your-project-id
-
-# Railway関連
-RAILWAY_TOKEN=your-railway-token
-
-# VPS関連
-VPS_HOST=your-server-ip
-VPS_USERNAME=your-username
-VPS_SSH_KEY=your-private-key
-
-# データベース関連
-DB_HOST=your-db-host
-DB_PASSWORD=your-db-password
-JWT_SECRET=your-jwt-secret
+# 必要なパッケージをインストール
+go get github.com/gin-gonic/gin
+go get gorm.io/gorm
+go get gorm.io/driver/postgres
+go get github.com/golang-jwt/jwt/v5
+go get github.com/joho/godotenv
+go get github.com/russross/blackfriday/v2
+go get golang.org/x/crypto/bcrypt
+go get github.com/go-redis/redis/v8
 ```
 
-### 環境別設定ファイル
+### 3.2 Dockerfile作成
 
-**frontend/vercel.json**
+**backend/Dockerfile**
+```dockerfile
+# 開発用
+FROM golang:1.21-alpine AS development
+
+WORKDIR /app
+
+# 依存関係をインストール
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Air (ホットリロード) をインストール
+RUN go install github.com/cosmtrek/air@latest
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動
+CMD ["air", "-c", ".air.toml"]
+
+# プロダクション用ビルド
+FROM golang:1.21-alpine AS builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/server/main.go
+
+# プロダクション用最終イメージ
+FROM alpine:latest AS production
+
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+
+COPY --from=builder /app/main .
+
+CMD ["./main"]
+```
+
+### 3.3 設定ファイル
+
+**backend/.env.example**
+```env
+# データベース設定
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=techblog
+DB_SSLMODE=disable
+
+# Redis設定
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT設定
+JWT_SECRET=your-super-secret-key-change-this-in-production
+
+# サーバー設定
+PORT=8080
+GIN_MODE=debug
+
+# CORS設定
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+```
+
+**backend/.air.toml** (ホットリロード設定)
+```toml
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  args_bin = []
+  bin = "./tmp/main"
+  cmd = "go build -o ./tmp/main cmd/server/main.go"
+  delay = 1000
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  kill_delay = "0s"
+  log = "build-errors.log"
+  send_interrupt = false
+  stop_on_root = false
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = false
+
+[screen]
+  clear_on_rebuild = false
+```
+
+## 4. フロントエンド（Next.js）セットアップ
+
+### 4.1 Next.js プロジェクト作成
+
+```bash
+cd frontend
+
+# package.json を作成
+npm init -y
+
+# 必要なパッケージをインストール
+npm install next@latest react@latest react-dom@latest typescript @types/react @types/node
+
+# 開発用パッケージ
+npm install -D tailwindcss postcss autoprefixer @types/react-dom
+
+# 追加パッケージ
+npm install lucide-react @tailwindcss/typography
+
+# Tailwind CSS 初期化
+npx tailwindcss init -p
+```
+
+### 4.2 Dockerfile作成
+
+**frontend/Dockerfile**
+```dockerfile
+# 開発用
+FROM node:18-alpine AS development
+
+WORKDIR /app
+
+# package.json と package-lock.json をコピー
+COPY package*.json ./
+
+# 依存関係をインストール
+RUN npm ci
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動
+CMD ["npm", "run", "dev"]
+
+# プロダクション用ビルド
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# プロダクション用最終イメージ
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# 必要なファイルのみコピー
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+```
+
+### 4.3 設定ファイル
+
+**frontend/package.json**
 ```json
 {
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://your-backend-url.railway.app/api"
+  "name": "techblog-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
-  "functions": {
-    "app/api/**": {
-      "includeFiles": "app/**"
-    }
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.0.0",
+    "lucide-react": "^0.263.1",
+    "@tailwindcss/typography": "^0.5.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
   }
 }
 ```
 
-## 6. デプロイフロー例
+**frontend/next.config.js**
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+  output: 'standalone',
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap.xml',
+      },
+    ];
+  },
+};
 
-### 開発フロー
+module.exports = nextConfig;
+```
+
+**frontend/tailwind.config.js**
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
+}
+```
+
+## 5. 便利スクリプト作成
+
+### 5.1 セットアップスクリプト
+
+**scripts/setup.sh**
 ```bash
-# 1. 機能開発
-git checkout -b feature/new-post-editor
-# 開発作業...
+#!/bin/bash
 
-# 2. プルリクエスト作成
-git push origin feature/new-post-editor
-# GitHub でPR作成
+echo "🚀 テックブログプロジェクトのセットアップを開始します..."
 
-# 3. プレビューデプロイ（自動）
-# Vercel/Netlifyが自動でプレビュー環境を作成
+# 環境ファイルをコピー
+if [ ! -f .env ]; then
+    cp .env.example .env
+    echo "✅ .env ファイルを作成しました"
+fi
 
-# 4. コードレビュー後、main にマージ
-# 自動で本番デプロイが実行される
+if [ ! -f backend/.env ]; then
+    cp backend/.env.example backend/.env
+    echo "✅ backend/.env ファイルを作成しました"
+fi
+
+if [ ! -f frontend/.env.local ]; then
+    cp frontend/.env.local.example frontend/.env.local
+    echo "✅ frontend/.env.local ファイルを作成しました"
+fi
+
+# Docker コンテナを起動
+echo "🐳 Docker コンテナを起動しています..."
+cd docker
+docker-compose -f docker-compose.dev.yml up -d postgres redis
+
+# データベースの起動を待つ
+echo "⏳ データベースの起動を待っています..."
+sleep 10
+
+# バックエンドの依存関係をインストール
+echo "📦 バックエンドの依存関係をインストール中..."
+cd ../backend
+go mod tidy
+
+# フロントエンドの依存関係をインストール
+echo "📦 フロントエンドの依存関係をインストール中..."
+cd ../frontend
+npm install
+
+echo "✅ セットアップが完了しました！"
+echo ""
+echo "開発を開始するには以下を実行してください:"
+echo "  ./scripts/dev.sh"
 ```
 
-### 本番デプロイフロー
+### 5.2 開発サーバー起動スクリプト
+
+**scripts/dev.sh**
 ```bash
-# main ブランチへのプッシュで自動実行
-1. テスト実行 → 2. ビルド → 3. デプロイ → 4. 通知
+#!/bin/bash
+
+echo "🔥 開発サーバーを起動しています..."
+
+# Docker サービスを起動
+echo "🐳 データベースとRedisを起動中..."
+cd docker
+docker-compose -f docker-compose.dev.yml up -d
+
+cd ..
+
+# バックエンドとフロントエンドを並列で起動
+echo "🚀 バックエンドとフロントエンドを起動中..."
+
+# バックエンドを起動 (バックグラウンド)
+cd backend
+air &
+BACKEND_PID=$!
+
+# フロントエンドを起動 (バックグラウンド)
+cd ../frontend
+npm run dev &
+FRONTEND_PID=$!
+
+echo "✅ 開発サーバーが起動しました！"
+echo ""
+echo "🌐 フロントエンド: http://localhost:3000"
+echo "🔗 API: http://localhost:8080"
+echo "📊 管理画面: http://localhost:3000/admin"
+echo ""
+echo "停止するには Ctrl+C を押してください"
+
+# シグナルハンドリング
+trap 'kill $BACKEND_PID $FRONTEND_PID; exit' INT
+
+# プロセスの完了を待つ
+wait
 ```
 
-## 7. モニタリング・ロギング
+## 6. 初回起動手順
 
-### GitHub Actions通知
+```bash
+# 1. プロジェクトをクローン/作成
+git clone <repository-url> techblog
+cd techblog
 
-**.github/workflows/notify.yml**
-```yaml
-name: Deploy Notification
+# 2. 実行権限を付与
+chmod +x scripts/*.sh
 
-on:
-  workflow_run:
-    workflows: ["Deploy Backend", "Deploy Frontend"]
-    types: [completed]
+# 3. セットアップを実行
+./scripts/setup.sh
 
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify Slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+# 4. 開発サーバーを起動
+./scripts/dev.sh
 ```
 
-## 8. 推奨GitHub管理プラクティス
+## 7. 開発ワークフロー
 
-### ブランチ保護設定
-```yaml
-Branch Protection Rules (main):
-- Require pull request reviews
-- Require status checks to pass
-- Require up-to-date branches
-- Include administrators
+### 日常的な開発
+```bash
+# 開発サーバー起動
+./scripts/dev.sh
+
+# 新しいマイグレーション作成
+cd backend
+go run cmd/migrate/main.go create migration_name
+
+# テスト実行
+cd backend && go test ./...
+cd frontend && npm test
 ```
 
-### Issue・PR テンプレート
+### データベース操作
+```bash
+# PostgreSQL に接続
+docker exec -it techblog_postgres_dev psql -U postgres -d techblog_dev
 
-**.github/ISSUE_TEMPLATE/bug_report.md**
-```markdown
-## バグの概要
-簡潔に説明してください
-
-## 再現手順
-1. 
-2. 
-3. 
-
-## 期待される動作
-
-## 実際の動作
-
-## 環境
-- OS:
-- ブラウザ:
-- バージョン:
+# データベースリセット
+docker-compose -f docker/docker-compose.dev.yml down -v
+docker-compose -f docker/docker-compose.dev.yml up -d
 ```
 
-**.github/pull_request_template.md**
-```markdown
-## 変更の概要
+## 8. トラブルシューティング
 
-## 変更内容
-- [ ] 新機能
-- [ ] バグ修正
-- [ ] リファクタリング
-- [ ] ドキュメント更新
+### よくある問題と解決方法
 
-## テスト
-- [ ] 単体テスト通過
-- [ ] 結合テスト確認
-- [ ] 手動テスト実施
+**ポートが使用中の場合**
+```bash
+# ポート確認
+lsof -i :3000
+lsof -i :8080
+lsof -i :5432
 
-## その他
+# プロセス終了
+kill -9 <PID>
 ```
 
-この構成により、効率的な開発とデプロイが可能になります！
+**Dockerコンテナの問題**
+```bash
+# 全コンテナ停止
+docker-compose -f docker/docker-compose.dev.yml down
+
+# ボリューム削除してクリーンスタート
+docker-compose -f docker/docker-compose.dev.yml down -v
+docker-compose -f docker/docker-compose.dev.yml up -d
+```
+
+**依存関係の問題**
+```bash
+# Go モジュールクリーンアップ
+cd backend
+go clean -modcache
+go mod download
+
+# Node.js モジュールクリーンアップ
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+これで完全な開発環境が構築できます！🚀
