@@ -106,10 +106,7 @@ export default function BlogList() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <select
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="タグでフィルター"
-        >
+        <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">すべてのタグ</option>
           <option value="react">React</option>
           <option value="nextjs">Next.js</option>
@@ -119,7 +116,7 @@ export default function BlogList() {
       </div>
 
       {/* ブログ記事一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {blogPosts.map((post) => (
           <Link href={`/blog/${post.id}`} key={post.id}>
             <Card className="h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer">
