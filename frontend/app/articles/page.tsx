@@ -6,8 +6,10 @@ import {
   CardDescription,
   CardContent
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
+import { User, CalendarDays, Clock } from "lucide-react";
 
 // ブログ記事の型定義
 interface BlogPost {
@@ -115,59 +117,69 @@ export default function BlogList() {
         </select>
       </div>
 
-      {/* ブログ記事一覧 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blogPosts.map((post) => (
-          <Link href={`/blog/${post.id}`} key={post.id}>
-            <Card className="h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-              {/* サムネイル画像 */}
-              {post.thumbnail && (
-                <div className="relative w-full h-48">
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <h2 className="text-3xl font-bold text-slate-900 mb-8">最新記事</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {blogPosts.map((post) => (
+              <Card
+                key={post.id}
+                className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col overflow-hidden"
+              >
+                <div className="relative h-48 w-full">
                   <Image
-                    src={post.thumbnail}
+                    src={post.image || "/placeholder.svg"}
                     alt={post.title}
                     fill
-                    className="object-cover rounded-t-xl"
+                    className="object-cover"
                   />
                 </div>
-              )}
-
-              <CardHeader>
-                <CardTitle className="text-xl line-clamp-2 hover:text-blue-600 transition-colors">
-                  {post.title}
-                </CardTitle>
-                <CardDescription className="line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                {/* タグ */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                <CardHeader className="flex-1">
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {post.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <CardTitle className="text-lg leading-tight">
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="hover:text-blue-600 transition-colors"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex justify-between items-center text-sm text-gray-500">
-                <div className="flex items-center gap-4">
-                  <span>{post.author}</span>
-                  <span>{post.readTime}</span>
-                </div>
-                <span>
-                  {new Date(post.publishedAt).toLocaleDateString("ja-JP")}
-                </span>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                      {post.title}
+                    </Link>
+                  </CardTitle>
+                  <CardDescription className="text-sm line-clamp-3">
+                    {post.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-col gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span className="truncate">{post.author}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        {new Date(post.date).toLocaleDateString("ja-JP", {
+                          month: "short",
+                          day: "numeric"
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {post.readTime}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ページネーション */}
       <div className="mt-12 flex justify-center">

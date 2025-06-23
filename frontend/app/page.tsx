@@ -1,13 +1,14 @@
 import {
   Card,
   CardHeader,
-  CardFooter,
   CardTitle,
   CardDescription,
   CardContent
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
+import { User, CalendarDays, Clock } from "lucide-react";
 
 // ブログ記事の型定義
 interface BlogPost {
@@ -20,76 +21,109 @@ interface BlogPost {
   thumbnail?: string;
   readTime: string;
 }
-
-// サンプルデータ
-const blogPosts: BlogPost[] = [
+const blogPosts = [
   {
-    id: "1",
-    title: "React 19の新機能とアップデート内容を徹底解説",
+    id: 1,
+    title: "Next.js 15の新機能を徹底解説",
     description:
-      "React 19で追加された新機能や改善点について、実際のコード例を交えながら詳しく解説します。パフォーマンス向上のポイントも紹介。",
+      "Next.js 15で追加された新機能とパフォーマンス改善について詳しく解説します。",
+    date: "2024-01-15",
+    readTime: "8分",
     author: "田中太郎",
-    publishedAt: "2024-12-15",
-    tags: ["React", "JavaScript", "Frontend"],
-    thumbnail: "/images/react19.jpg",
-    readTime: "5分"
-  },
-  {
-    id: "2",
-    title: "Next.js App RouterとPages Routerの違いと移行のポイント",
-    description:
-      "Next.js 13以降のApp Routerについて、従来のPages Routerとの違いや移行時の注意点を実例とともに説明します。",
-    author: "佐藤花子",
-    publishedAt: "2024-12-10",
     tags: ["Next.js", "React", "Web開発"],
-    readTime: "8分"
+    slug: "nextjs-15-features",
+    image: "/placeholder.svg?height=200&width=400&text=Next.js+15"
   },
   {
-    id: "3",
-    title: "TypeScriptの型安全性を活用したAPIクライアント設計",
+    id: 2,
+    title: "TypeScriptの型安全性を活用したAPI設計",
     description:
-      "TypeScriptの強力な型システムを活用して、保守性の高いAPIクライアントを設計する方法を解説します。",
-    author: "山田次郎",
-    publishedAt: "2024-12-08",
+      "TypeScriptの強力な型システムを使って、保守性の高いAPIを設計する方法を紹介します。",
+    date: "2024-01-10",
+    readTime: "12分",
+    author: "佐藤花子",
     tags: ["TypeScript", "API", "設計"],
-    readTime: "6分"
+    slug: "typescript-api-design",
+    image: "/placeholder.svg?height=200&width=400&text=TypeScript+API"
   },
   {
-    id: "4",
-    title: "Tailwind CSSでダークモード対応のコンポーネント作成",
+    id: 3,
+    title: "React Server Componentsの実践的な使い方",
     description:
-      "Tailwind CSSを使用してダークモードに対応したコンポーネントを作成する方法と、実装時のベストプラクティスを紹介。",
+      "React Server Componentsを実際のプロジェクトで活用する際のベストプラクティスを解説します。",
+    date: "2024-01-05",
+    readTime: "10分",
+    author: "山田次郎",
+    tags: ["React", "Server Components", "パフォーマンス"],
+    slug: "react-server-components",
+    image: "/placeholder.svg?height=200&width=400&text=React+Server"
+  },
+  {
+    id: 4,
+    title: "Tailwind CSSで効率的なスタイリング",
+    description:
+      "Tailwind CSSを使った効率的なスタイリング手法とベストプラクティスを紹介します。",
+    date: "2024-01-03",
+    readTime: "6分",
     author: "鈴木一郎",
-    publishedAt: "2024-12-05",
-    tags: ["Tailwind CSS", "CSS", "UI/UX"],
-    readTime: "4分"
+    tags: ["CSS", "Tailwind", "デザイン"],
+    slug: "tailwind-css-styling",
+    image: "/placeholder.svg?height=200&width=400&text=Tailwind+CSS"
   },
   {
-    id: "5",
-    title: "GraphQLとREST APIの使い分けと実装のコツ",
+    id: 5,
+    title: "GraphQLとREST APIの比較検討",
     description:
-      "GraphQLとREST APIそれぞれの特徴を理解し、プロジェクトに適した選択をするための判断基準と実装のポイントを解説。",
+      "GraphQLとREST APIのメリット・デメリットを比較し、適切な選択指針を提示します。",
+    date: "2024-01-01",
+    readTime: "15分",
     author: "高橋美咲",
-    publishedAt: "2024-12-03",
-    tags: ["GraphQL", "REST API", "バックエンド"],
-    readTime: "7分"
+    tags: ["GraphQL", "REST", "API"],
+    slug: "graphql-vs-rest",
+    image: "/placeholder.svg?height=200&width=400&text=GraphQL+vs+REST"
   },
   {
-    id: "6",
-    title: "Docker Composeを使った開発環境構築の完全ガイド",
+    id: 6,
+    title: "Docker環境でのNext.js開発",
     description:
-      "Docker Composeを活用して効率的な開発環境を構築する方法を、実際の設定ファイルとともに詳しく解説します。",
+      "Dockerを使ったNext.jsアプリケーションの開発環境構築と運用のコツを解説します。",
+    date: "2023-12-28",
+    readTime: "9分",
     author: "伊藤健太",
-    publishedAt: "2024-12-01",
-    tags: ["Docker", "DevOps", "環境構築"],
-    readTime: "10分"
+    tags: ["Docker", "Next.js", "DevOps"],
+    slug: "nextjs-docker-development",
+    image: "/placeholder.svg?height=200&width=400&text=Docker+Next.js"
+  },
+  {
+    id: 7,
+    title: "WebAssemblyの基礎と活用事例",
+    description:
+      "WebAssemblyの基本概念から実際の活用事例まで、幅広く紹介します。",
+    date: "2023-12-25",
+    readTime: "11分",
+    author: "渡辺真理",
+    tags: ["WebAssembly", "パフォーマンス", "ブラウザ"],
+    slug: "webassembly-basics",
+    image: "/placeholder.svg?height=200&width=400&text=WebAssembly"
+  },
+  {
+    id: 8,
+    title: "モダンJavaScriptのテスト戦略",
+    description:
+      "Jest、Testing Library、Playwrightを使った包括的なテスト戦略について解説します。",
+    date: "2023-12-22",
+    readTime: "13分",
+    author: "中村雅人",
+    tags: ["JavaScript", "テスト", "Jest"],
+    slug: "modern-javascript-testing",
+    image: "/placeholder.svg?height=200&width=400&text=JavaScript+Testing"
   }
 ];
 
 export default function BlogList() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* ヘッダー部分 */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Tech Blog</h1>
         <p className="text-lg text-gray-600">
@@ -118,80 +152,98 @@ export default function BlogList() {
         </select>
       </div>
 
-      {/* ブログ記事一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {blogPosts.map((post) => (
-          <Link href={`/blog/${post.id}`} key={post.id}>
-            <Card className="h-full hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-              {/* サムネイル画像 */}
-              {post.thumbnail && (
-                <div className="relative w-full h-48">
+      {/* Blog Posts */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <h2 className="text-3xl font-bold text-slate-900 mb-8">最新記事</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {blogPosts.map((post) => (
+              <Card
+                key={post.id}
+                className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col overflow-hidden"
+              >
+                <div className="relative h-48 w-full">
                   <Image
-                    src={post.thumbnail}
+                    src={post.image || "/placeholder.svg"}
                     alt={post.title}
                     fill
-                    className="object-cover rounded-t-xl"
+                    className="object-cover"
                   />
                 </div>
-              )}
-
-              <CardHeader>
-                <CardTitle className="text-xl line-clamp-2 hover:text-blue-600 transition-colors">
-                  {post.title}
-                </CardTitle>
-                <CardDescription className="line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                {/* タグ */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                <CardHeader className="flex-1">
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {post.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <CardTitle className="text-lg leading-tight">
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="hover:text-blue-600 transition-colors"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex justify-between items-center text-sm text-gray-500">
-                <div className="flex items-center gap-4">
-                  <span>{post.author}</span>
-                  <span>{post.readTime}</span>
-                </div>
-                <span>
-                  {new Date(post.publishedAt).toLocaleDateString("ja-JP")}
-                </span>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* ページネーション */}
-      <div className="mt-12 flex justify-center">
-        <div className="flex gap-2">
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            前へ
-          </button>
-          <button className="px-3 py-2 bg-blue-500 text-white rounded">
-            1
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            2
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            3
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            次へ
-          </button>
+                      {post.title}
+                    </Link>
+                  </CardTitle>
+                  <CardDescription className="text-sm line-clamp-3">
+                    {post.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-col gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span className="truncate">{post.author}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        {new Date(post.date).toLocaleDateString("ja-JP", {
+                          month: "short",
+                          day: "numeric"
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {post.readTime}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white py-12 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <h3 className="text-2xl font-bold mb-4">TechBlog</h3>
+          <p className="text-slate-400 mb-6">技術の力で世界をより良くする</p>
+          <div className="flex justify-center space-x-6">
+            <Link
+              href="/privacy"
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              プライバシーポリシー
+            </Link>
+            <Link
+              href="/terms"
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              利用規約
+            </Link>
+            <Link
+              href="/contact"
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              お問い合わせ
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
