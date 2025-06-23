@@ -1,15 +1,26 @@
+"use client";
+
 import {
   Card,
   CardHeader,
   CardFooter,
   CardTitle,
-  CardDescription,
-  CardContent
+  CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import Link from "next/link";
 import Image from "next/image";
-import { User, CalendarDays, Clock } from "lucide-react";
+import { User, CalendarDays, Clock, Search } from "lucide-react";
+import { useState } from "react";
 
 // ブログ記事の型定義
 interface BlogPost {
@@ -19,8 +30,9 @@ interface BlogPost {
   author: string;
   publishedAt: string;
   tags: string[];
-  thumbnail?: string;
+  thumbnail: string;
   readTime: string;
+  slug: string;
 }
 
 // サンプルデータ
@@ -33,8 +45,9 @@ const blogPosts: BlogPost[] = [
     author: "田中太郎",
     publishedAt: "2024-12-15",
     tags: ["React", "JavaScript", "Frontend"],
-    thumbnail: "/images/react19.jpg",
-    readTime: "5分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "5分",
+    slug: "react-19-new-features"
   },
   {
     id: "2",
@@ -44,7 +57,9 @@ const blogPosts: BlogPost[] = [
     author: "佐藤花子",
     publishedAt: "2024-12-10",
     tags: ["Next.js", "React", "Web開発"],
-    readTime: "8分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "8分",
+    slug: "nextjs-app-router-migration"
   },
   {
     id: "3",
@@ -54,7 +69,9 @@ const blogPosts: BlogPost[] = [
     author: "山田次郎",
     publishedAt: "2024-12-08",
     tags: ["TypeScript", "API", "設計"],
-    readTime: "6分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "6分",
+    slug: "typescript-api-client-design"
   },
   {
     id: "4",
@@ -64,7 +81,9 @@ const blogPosts: BlogPost[] = [
     author: "鈴木一郎",
     publishedAt: "2024-12-05",
     tags: ["Tailwind CSS", "CSS", "UI/UX"],
-    readTime: "4分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "4分",
+    slug: "tailwind-dark-mode-components"
   },
   {
     id: "5",
@@ -74,7 +93,9 @@ const blogPosts: BlogPost[] = [
     author: "高橋美咲",
     publishedAt: "2024-12-03",
     tags: ["GraphQL", "REST API", "バックエンド"],
-    readTime: "7分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "7分",
+    slug: "graphql-vs-rest-api"
   },
   {
     id: "6",
@@ -84,51 +105,103 @@ const blogPosts: BlogPost[] = [
     author: "伊藤健太",
     publishedAt: "2024-12-01",
     tags: ["Docker", "DevOps", "環境構築"],
-    readTime: "10分"
+    thumbnail: "/placeholder.svg?height=200&width=400",
+    readTime: "10分",
+    slug: "docker-compose-development-guide"
   }
 ];
 
+// 全てのタグを取得
+const getAllTags = (posts: BlogPost[]) => {
+  const tags = posts.flatMap((post) => post.tags);
+  return Array.from(new Set(tags));
+};
+
 export default function BlogList() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState("all"); // Updated default value
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
+
+  // フィルタリング
+  const filteredPosts = blogPosts.filter((post) => {
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTag = selectedTag === "all" || post.tags.includes(selectedTag);
+    return matchesSearch && matchesTag;
+  });
+
+  // ページネーション
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const paginatedPosts = filteredPosts.slice(
+    startIndex,
+    startIndex + postsPerPage
+  );
+
+  const allTags = getAllTags(blogPosts);
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* ヘッダー部分 */}
-      <div className="mb-8">
+      <div className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Tech Blog</h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           最新の技術情報や開発のヒントをお届けします
         </p>
       </div>
 
       {/* フィルター・検索バー */}
-      <div className="mb-8 flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[300px]">
-          <input
+      <div className="mb-8 flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
             type="text"
             placeholder="記事を検索..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
           />
         </div>
-        <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">すべてのタグ</option>
-          <option value="react">React</option>
-          <option value="nextjs">Next.js</option>
-          <option value="typescript">TypeScript</option>
-          <option value="css">CSS</option>
-        </select>
+        <Select value={selectedTag} onValueChange={setSelectedTag}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="タグで絞り込み" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">すべてのタグ</SelectItem>{" "}
+            {/* Updated value prop */}
+            {allTags.map((tag) => (
+              <SelectItem key={tag} value={tag}>
+                {tag}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <section className="py-12 px-4">
-        <div className="container mx-auto max-w-7xl">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8">最新記事</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {blogPosts.map((post) => (
+      {/* 記事一覧 */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          最新記事 ({filteredPosts.length}件)
+        </h2>
+
+        {paginatedPosts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              該当する記事が見つかりませんでした。
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginatedPosts.map((post) => (
               <Card
                 key={post.id}
                 className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col overflow-hidden"
               >
                 <div className="relative h-48 w-full">
                   <Image
-                    src={post.image || "/placeholder.svg"}
+                    src={post.thumbnail || "/placeholder.svg"}
                     alt={post.title}
                     fill
                     className="object-cover"
@@ -154,8 +227,8 @@ export default function BlogList() {
                     {post.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-col gap-2 text-xs text-slate-500">
+                <CardFooter className="pt-0">
+                  <div className="flex flex-col gap-2 text-xs text-gray-500 w-full">
                     <div className="flex items-center gap-1">
                       <User className="w-3 h-3" />
                       <span className="truncate">{post.author}</span>
@@ -163,44 +236,65 @@ export default function BlogList() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <CalendarDays className="w-3 h-3" />
-                        {new Date(post.date).toLocaleDateString("ja-JP", {
-                          month: "short",
-                          day: "numeric"
-                        })}
+                        <span>
+                          {new Date(post.publishedAt).toLocaleDateString(
+                            "ja-JP",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric"
+                            }
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {post.readTime}
+                        <span>{post.readTime}</span>
                       </div>
                     </div>
                   </div>
-                </CardContent>
+                </CardFooter>
               </Card>
             ))}
           </div>
-        </div>
-      </section>
+        )}
+      </div>
 
       {/* ページネーション */}
-      <div className="mt-12 flex justify-center">
-        <div className="flex gap-2">
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="bg-white text-gray-700"
+          >
             前へ
-          </button>
-          <button className="px-3 py-2 bg-blue-500 text-white rounded">
-            1
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            2
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
-            3
-          </button>
-          <button className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded">
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              onClick={() => setCurrentPage(page)}
+              className={currentPage === page ? "" : "bg-white text-gray-700"}
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="outline"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="bg-white text-gray-700"
+          >
             次へ
-          </button>
+          </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
