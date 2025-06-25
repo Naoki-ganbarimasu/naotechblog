@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Eye, Edit, Save, FileText, Settings } from "lucide-react";
+import { Edit, Eye, FileText, Save, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface MarkdownEditorProps {
   initialContent?: string;
@@ -23,7 +23,7 @@ export default function MarkdownEditor({
   initialTitle = "",
   onSave,
   isLoading = false,
-  blogs
+  blogs,
 }: MarkdownEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
@@ -78,7 +78,7 @@ export default function MarkdownEditor({
             tags,
             published,
             blogId,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           })
         );
       }
@@ -122,7 +122,7 @@ export default function MarkdownEditor({
       excerpt: excerpt.trim() || content.slice(0, 150) + "...",
       tags,
       published,
-      blogId
+      blogId,
     });
 
     // 保存後は下書きを削除
@@ -358,7 +358,7 @@ function hello() {
                   dangerouslySetInnerHTML={{
                     __html:
                       renderMarkdown(content) ||
-                      "<p>本文が入力されていません</p>"
+                      "<p>本文が入力されていません</p>",
                   }}
                 />
               </article>

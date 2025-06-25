@@ -1,25 +1,25 @@
 "use client";
 
-import {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import Link from "next/link";
+import { CalendarDays, Clock, Search, User } from "lucide-react";
 import Image from "next/image";
-import { User, CalendarDays, Clock, Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 // ブログ記事の型定義
@@ -47,7 +47,7 @@ const blogPosts: BlogPost[] = [
     tags: ["React", "JavaScript", "Frontend"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "5分",
-    slug: "react-19-new-features"
+    slug: "react-19-new-features",
   },
   {
     id: "2",
@@ -59,7 +59,7 @@ const blogPosts: BlogPost[] = [
     tags: ["Next.js", "React", "Web開発"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "8分",
-    slug: "nextjs-app-router-migration"
+    slug: "nextjs-app-router-migration",
   },
   {
     id: "3",
@@ -71,7 +71,7 @@ const blogPosts: BlogPost[] = [
     tags: ["TypeScript", "API", "設計"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "6分",
-    slug: "typescript-api-client-design"
+    slug: "typescript-api-client-design",
   },
   {
     id: "4",
@@ -83,7 +83,7 @@ const blogPosts: BlogPost[] = [
     tags: ["Tailwind CSS", "CSS", "UI/UX"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "4分",
-    slug: "tailwind-dark-mode-components"
+    slug: "tailwind-dark-mode-components",
   },
   {
     id: "5",
@@ -95,7 +95,7 @@ const blogPosts: BlogPost[] = [
     tags: ["GraphQL", "REST API", "バックエンド"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "7分",
-    slug: "graphql-vs-rest-api"
+    slug: "graphql-vs-rest-api",
   },
   {
     id: "6",
@@ -107,8 +107,8 @@ const blogPosts: BlogPost[] = [
     tags: ["Docker", "DevOps", "環境構築"],
     thumbnail: "/placeholder.svg?height=200&width=400",
     readTime: "10分",
-    slug: "docker-compose-development-guide"
-  }
+    slug: "docker-compose-development-guide",
+  },
 ];
 
 // 全てのタグを取得
@@ -242,7 +242,7 @@ export default function BlogList() {
                             {
                               year: "numeric",
                               month: "short",
-                              day: "numeric"
+                              day: "numeric",
                             }
                           )}
                         </span>
